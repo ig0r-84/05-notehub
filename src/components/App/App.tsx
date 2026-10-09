@@ -7,7 +7,7 @@ import { useDebounce } from "use-debounce";
 
 export default function App() {
   const [inputValue, setInputValue] = useState("");
-  const [search] = useDebounce(inputValue, 5000);
+  const [search] = useDebounce(inputValue, 500);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["notes", search],
