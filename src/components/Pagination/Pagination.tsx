@@ -1,36 +1,36 @@
+import type { ComponentType } from "react";
 import ReactPaginateModule from "react-paginate";
+import type { ReactPaginateProps } from "react-paginate";
 import css from "./Pagination.module.css";
 
-const ReactPaginate =
-  (
-    ReactPaginateModule as unknown as {
-      default?: typeof ReactPaginateModule;
-    }
-  ).default ?? ReactPaginateModule;
+type ModuleWithDefault<T> = {
+  default: T;
+};
+
+const ReactPaginate = (
+  ReactPaginateModule as unknown as ModuleWithDefault<
+    ComponentType<ReactPaginateProps>
+  >
+).default;
 
 interface PaginationProps {
   totalPages: number;
-  perPage: number;
   currentPage: number;
   onPageChange: (page: number) => void;
 }
 
 export default function Pagination({
   totalPages,
-  perPage,
   currentPage,
   onPageChange,
 }: PaginationProps) {
-  console.log("totalPages:", totalPages);
-  console.log("perPage:", perPage);
-  const pageCount = totalPages;
-  if (pageCount <= 1) {
+  if (totalPages <= 1) {
     return null;
   }
 
   return (
     <ReactPaginate
-      pageCount={pageCount}
+      pageCount={totalPages}
       forcePage={currentPage - 1}
       onPageChange={(event) => {
         onPageChange(event.selected + 1);

@@ -1,11 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import css from "./App.module.css";
 import { useState } from "react";
 import SearchBox from "../SearchBox/SearchBox";
 import { useDebounce } from "use-debounce";
 import Pagination from "../Pagination/Pagination";
 import NoteList from "../NoteList/NoteList";
-import { deleteNote, fetchNotes } from "../../services/noteService";
+import { fetchNotes } from "../../services/noteService";
 import NoteForm from "../NoteForm/NoteForm";
 import Modal from "../Modal/Modal";
 
@@ -15,13 +15,6 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [search] = useDebounce(inputValue, 500);
-  const queryClient = useQueryClient();
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteNote(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-  });
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["notes", search, page],
@@ -31,15 +24,27 @@ export default function App() {
 
   return (
     <div className={css.app}>
-      <h1>NoteHub</h1>
-      <button onClick={() => setIsModalOpen(true)}>Create note</button>
-      <SearchBox
-        value={inputValue}
-        onSearch={(value) => {
-          setInputValue(value);
-          setPage(1);
-        }}
-      />
+      <div className={css.toolbar}>
+        <SearchBox
+          value={inputValue}
+          onSearch={(value) => {
+            setInputValue(value);
+            setPage(1);
+          }}
+        />
+
+        {data && data.totalPages > 1 && (
+          <Pagination
+            totalPages={data.totalPages}
+            currentPage={page}
+            onPageChange={setPage}
+          />
+        )}
+
+        <button className={css.button} onClick={() => setIsModalOpen(true)}>
+          Create note +
+        </button>
+      </div>
 
       {isLoading && <p>Завантаження нотаток...</p>}
 
@@ -47,26 +52,14 @@ export default function App() {
 
       {!isLoading && !isError && data && (
         <>
-          {" "}
           {data.notes.length > 0 ? (
-            <NoteList
-              notes={data.notes}
-              onDelete={(id) => {
-                deleteMutation.mutate(id);
-              }}
-              isDeleting={deleteMutation.isPending}
-            />
+            <NoteList notes={data.notes} />
           ) : (
             <p>Нотаток не знайдено.</p>
           )}
-          <Pagination
-            totalPages={data.totalPages}
-            perPage={12}
-            currentPage={page}
-            onPageChange={setPage}
-          />
         </>
       )}
+
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
           <NoteForm onCancel={() => setIsModalOpen(false)} />
