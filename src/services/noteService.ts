@@ -11,12 +11,12 @@ const noteApi = axios.create({
 
 interface NotesHttpResponse {
   notes: Note[];
-  total: number;
+  totalPages: number;
 }
 interface CreateNoteData {
   title: string;
   content: string;
-  categoryId: string;
+  tag: string;
 }
 
 export const fetchNotes = async (
