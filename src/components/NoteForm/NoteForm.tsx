@@ -1,35 +1,48 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createNote } from "../../services/noteService";
 import css from "./NoteForm.module.css";
 
 interface NoteFormProps {
-  onSubmit: (values: { title: string; content: string; tag: string }) => void;
   onCancel: () => void;
 }
+
 const NoteSchema = Yup.object().shape({
   title: Yup.string()
     .min(3, "Заголовок має містити щонайменше 3 символи")
     .max(50, "Заголовок має містити не більше 50 символів")
     .required("Введіть заголовок"),
-
   content: Yup.string().max(500, "Текст має містити не більше 500 символів"),
-
   tag: Yup.string()
     .oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"])
     .required("Оберіть тег"),
 });
+
 const initialValues = {
   title: "",
   content: "",
   tag: "Todo",
 };
 
-export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
+export default function NoteForm({ onCancel }: NoteFormProps) {
+  const queryClient = useQueryClient();
+
+  const createMutation = useMutation({
+    mutationFn: createNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      onCancel();
+    },
+  });
+
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={NoteSchema}
-      onSubmit={onSubmit}
+      onSubmit={(values) => {
+        createMutation.mutate(values);
+      }}
     >
       {({ isSubmitting }) => (
         <Form className={css.form}>
@@ -79,11 +92,17 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
             <button
               type="submit"
               className={css.submitButton}
-              disabled={isSubmitting}
+              disabled={isSubmitting || createMutation.isPending}
             >
-              Create note
+              {createMutation.isPending ? "Creating..." : "Create note"}
             </button>
           </div>
+
+          {createMutation.isError && (
+            <p className={css.error}>
+              Не вдалося створити нотатку. Спробуйте ще раз.
+            </p>
+          )}
         </Form>
       )}
     </Formik>

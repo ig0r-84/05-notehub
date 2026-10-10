@@ -5,7 +5,7 @@ import SearchBox from "../SearchBox/SearchBox";
 import { useDebounce } from "use-debounce";
 import Pagination from "../Pagination/Pagination";
 import NoteList from "../NoteList/NoteList";
-import { createNote, deleteNote, fetchNotes } from "../../services/noteService";
+import { deleteNote, fetchNotes } from "../../services/noteService";
 import NoteForm from "../NoteForm/NoteForm";
 import Modal from "../Modal/Modal";
 
@@ -20,13 +20,6 @@ export default function App() {
     mutationFn: (id: string) => deleteNote(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-  });
-  const createMutation = useMutation({
-    mutationFn: createNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      setIsModalOpen(false);
     },
   });
 
@@ -76,10 +69,7 @@ export default function App() {
       )}
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
-          <NoteForm
-            onCancel={() => setIsModalOpen(false)}
-            onSubmit={(values) => createMutation.mutate(values)}
-          />
+          <NoteForm onCancel={() => setIsModalOpen(false)} />
         </Modal>
       )}
     </div>
